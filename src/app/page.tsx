@@ -124,11 +124,47 @@ export default function Home() {
             ) : blogPost ? (
               <article className="p-8 lg:p-12">
                 <div className="max-w-4xl mx-auto">
-                  <MarkdownRenderer content={blogPost.content} />
-                  <div className="mt-12 pt-8 border-t border-gray-200">
-                    <p className="text-sm text-gray-500">
-                      Generated on {new Date(blogPost.createdAt).toLocaleDateString()}
-                    </p>
+                  {/* Blog Title */}
+                  <div className="mb-8 pb-6 border-b border-gray-200">
+                    <h1 className="text-4xl font-bold text-gray-900 mb-3">
+                      {blogPost.title}
+                    </h1>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <span>Generated for {selectedRole}</span>
+                      <span className="mx-2">•</span>
+                      <span>{new Date(blogPost.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Blog Content */}
+                  <div className="blog-content">
+                    <MarkdownRenderer content={blogPost.content} />
+                  </div>
+                  
+                  {/* Call to Action */}
+                  <div className="mt-12 pt-8 border-t border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
+                    <div className="text-center">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        Ready to Transform Your Work?
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Start using these AI tools today and experience the difference they can make in your daily workflow.
+                      </p>
+                      <div className="flex justify-center space-x-4">
+                        <button
+                          onClick={() => setSelectedRole('')}
+                          className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          Explore Other Roles
+                        </button>
+                        <button
+                          onClick={() => generateBlogPost()}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          Generate New Guide
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </article>

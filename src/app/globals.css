@@ -20,7 +20,82 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: #171717;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for blog content */
+.blog-content {
+  @apply text-gray-800;
+}
+
+.blog-content h1 {
+  @apply text-4xl font-bold text-gray-900 mb-6 mt-8 leading-tight;
+}
+
+.blog-content h2 {
+  @apply text-3xl font-bold text-gray-900 mb-4 mt-8 leading-tight;
+}
+
+.blog-content h3 {
+  @apply text-2xl font-semibold text-gray-900 mb-3 mt-6 leading-tight;
+}
+
+.blog-content p {
+  @apply mb-4 text-gray-800 leading-relaxed text-lg;
+}
+
+.blog-content ul, .blog-content ol {
+  @apply my-4 ml-6 space-y-2;
+}
+
+.blog-content li {
+  @apply text-gray-800 leading-relaxed text-lg;
+}
+
+.blog-content code {
+  background-color: #f3f4f6 !important;
+  color: #991b1b !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.875rem !important;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace !important;
+  font-weight: 500 !important;
+}
+
+.blog-content pre {
+  background-color: #f3f4f6 !important;
+  color: #991b1b !important;
+  padding: 1rem !important;
+  border-radius: 0.5rem !important;
+  margin: 1.5rem 0 !important;
+  overflow-x: auto !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.blog-content pre code {
+  background-color: transparent !important;
+  color: #991b1b !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.blog-content blockquote {
+  border-left: 4px solid #ef4444 !important;
+  padding-left: 1rem !important;
+  margin: 1rem 0 !important;
+  color: #991b1b !important;
+  background-color: #f9fafb !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 0 0.25rem 0.25rem 0 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.blog-content strong {
+  @apply font-bold text-gray-900;
 }
