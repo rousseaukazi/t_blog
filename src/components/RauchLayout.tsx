@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react'
 import Link from 'next/link'
 
@@ -5,9 +7,14 @@ interface RauchLayoutProps {
   children: React.ReactNode
   title?: string
   description?: string
+  onBrandClick?: () => void
 }
 
-export function RauchLayout({ children, title, description }: RauchLayoutProps) {
+export function RauchLayout({ children, title, description, onBrandClick }: RauchLayoutProps) {
+  const handleBrandClick = () => {
+    if (onBrandClick) onBrandClick()
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -15,21 +22,21 @@ export function RauchLayout({ children, title, description }: RauchLayoutProps) 
         <div className="rauch-container">
           <nav className="rauch-nav">
             <div>
-              <Link href="/" className="text-xl font-bold text-gray-900">
-                AI Tools Blog
+              <Link href="/" onClick={handleBrandClick} className="flex items-center space-x-2 group">
+                <span className="text-xl font-bold text-gray-900 group-hover:underline">
+                  WhichTools.ai
+                </span>
+                <img
+                  src="/favicon.png"
+                  alt="WhichTools.ai logo"
+                  className="w-7 h-7"
+                />
               </Link>
               {description && (
                 <p className="text-gray-600 text-sm mt-1">{description}</p>
               )}
             </div>
-            <div className="rauch-nav-links">
-              <Link href="/" className="rauch-nav-link active">
-                Home
-              </Link>
-              <Link href="/about" className="rauch-nav-link">
-                About
-              </Link>
-            </div>
+            {/* Navigation links removed per design update */}
           </nav>
         </div>
       </header>

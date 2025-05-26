@@ -50,10 +50,16 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
     
-    // Check if blog already exists in cache
-    const existingBlog = blogCache.get(jobRole)
-    if (existingBlog) {
-      return NextResponse.json(existingBlog)
+    // Determine if caller wants a fresh blog (skip cache)
+    const url = new URL(request.url)
+    const forceNew = url.searchParams.get('forceNew') === '1'
+
+    // Return cached blog unless forceNew has been requested
+    if (!forceNew) {
+      const existingBlog = blogCache.get(jobRole)
+      if (existingBlog) {
+        return NextResponse.json(existingBlog)
+      }
     }
     
     // Select 3 tools for this role

@@ -53,11 +53,11 @@ export default function Home() {
     }
   }
 
-  const generateBlogPost = async () => {
+  const generateBlogPost = async (forceNew: boolean = false) => {
     setGenerating(true)
     setError(null)
     try {
-      const response = await fetch('/api/blog/generate', {
+      const response = await fetch(`/api/blog/generate${forceNew ? '?forceNew=1' : ''}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,10 +79,17 @@ export default function Home() {
     }
   }
 
+  // Reset the page to its pristine state when the brand logo is clicked
+  const handleBrandClick = () => {
+    setSelectedRole('')
+    setBlogPost(null)
+    setError(null)
+  }
+
   return (
     <RauchLayout 
-      title="AI Tools for Every Job"
       description="Discover how AI can transform your work"
+      onBrandClick={handleBrandClick}
     >
       {/* Job Role Selection */}
       <div className="mb-12">
@@ -139,10 +146,18 @@ export default function Home() {
                     Explore Other Roles
                   </button>
                   <button
-                    onClick={() => generateBlogPost()}
-                    className="rauch-button rauch-button-primary"
+                    onClick={() => generateBlogPost(true)}
+                    disabled={generating}
+                    className="rauch-button rauch-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Generate New Guide
+                    {generating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Generating...
+                      </>
+                    ) : (
+                      'Generate New Guide'
+                    )}
                   </button>
                 </div>
               </div>
@@ -166,7 +181,7 @@ export default function Home() {
               )}
               
               <button
-                onClick={generateBlogPost}
+                onClick={() => generateBlogPost()}
                 disabled={generating}
                 className="rauch-button rauch-button-primary rauch-button-large disabled:opacity-50 disabled:cursor-not-allowed"
               >
