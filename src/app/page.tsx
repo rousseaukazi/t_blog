@@ -209,7 +209,7 @@ export default function Home() {
             Select a job role to get started
           </h2>
           <p className="text-gray-600 max-w-md mx-auto">
-            Choose from our list of common job roles to discover AI tools that can help you work smarter.
+            Choose from our list of common job roles to explore AI tools that can help you work smarter.
           </p>
         </div>
       )}
