@@ -3,10 +3,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from '@/lib/prisma'
 import { aiTools } from '@/lib/data'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-})
-
 function selectToolsForRole(jobRole: string): typeof aiTools {
   // Simple logic to select diverse tools - in production, this could be more sophisticated
   const shuffled = [...aiTools].sort(() => 0.5 - Math.random())
@@ -37,6 +33,22 @@ export async function POST(request: Request) {
     if (!jobRole) {
       return NextResponse.json({ error: 'Job role is required' }, { status: 400 })
     }
+
+    // Check if API key exists
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      console.error('ANTHROPIC_API_KEY is not set')
+      return NextResponse.json({ 
+        error: 'Anthropic API key is not configured. Please set the ANTHROPIC_API_KEY environment variable.' 
+      }, { status: 500 })
+    }
+
+    if (!apiKey.startsWith('sk-ant-')) {
+      console.error('Invalid API key format')
+      return NextResponse.json({ 
+        error: 'Invalid Anthropic API key format.' 
+      }, { status: 500 })
+    }
     
     // Check if blog already exists
     const existingBlog = await prisma.blogPost.findUnique({
@@ -49,6 +61,11 @@ export async function POST(request: Request) {
     
     // Select 3 tools for this role
     const selectedTools = selectToolsForRole(jobRole)
+
+    // Initialize Anthropic client
+    const anthropic = new Anthropic({
+      apiKey: apiKey,
+    })
     
     // Generate blog content using Claude
     const prompt = `You are an expert content writer creating highly engaging blog posts about AI tools for specific job roles. 
@@ -115,6 +132,23 @@ Write in Markdown format. Be creative, practical, and conversion-focused.`
     return NextResponse.json(blogPost)
   } catch (error) {
     console.error('Error generating blog post:', error)
-    return NextResponse.json({ error: 'Failed to generate blog post' }, { status: 500 })
+    
+    // More specific error handling
+    if (error instanceof Error) {
+      if (error.message.includes('authentication')) {
+        return NextResponse.json({ 
+          error: 'Authentication failed. Please check your Anthropic API key.' 
+        }, { status: 401 })
+      }
+      if (error.message.includes('rate limit')) {
+        return NextResponse.json({ 
+          error: 'Rate limit exceeded. Please try again later.' 
+        }, { status: 429 })
+      }
+    }
+    
+    return NextResponse.json({ 
+      error: 'Failed to generate blog post. Please try again.' 
+    }, { status: 500 })
   }
 } 
