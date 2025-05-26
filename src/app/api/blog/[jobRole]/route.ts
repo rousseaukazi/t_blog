@@ -3,13 +3,14 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: Request,
-  { params }: { params: { jobRole: string } }
+  { params }: { params: Promise<{ jobRole: string }> }
 ) {
   try {
-    const jobRole = decodeURIComponent(params.jobRole)
+    const { jobRole } = await params
+    const decodedJobRole = decodeURIComponent(jobRole)
     
     const blogPost = await prisma.blogPost.findUnique({
-      where: { jobRole }
+      where: { jobRole: decodedJobRole }
     })
     
     if (!blogPost) {
