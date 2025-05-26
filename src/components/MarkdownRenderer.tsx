@@ -20,8 +20,29 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       if (currentParagraph.length > 0) {
         const text = currentParagraph.join(' ').trim()
         if (text) {
+          // Check if this paragraph is a section header
+          const sectionHeaderMatch = text.match(/^\*{1,2}\s*([^*]+?)\s*\*{1,2}$/)
+          if (sectionHeaderMatch) {
+            const content = sectionHeaderMatch[1].trim()
+            if (content.toLowerCase().includes('perfect for') || 
+                content.toLowerCase().includes('try these prompts') ||
+                content.toLowerCase().includes('how to use') ||
+                content.toLowerCase().includes('best practices') ||
+                content.toLowerCase().includes('pro tip')) {
+              elements.push(
+                <p key={elements.length} className="mb-3 mt-6">
+                  <strong className="text-lg font-semibold text-gray-900">
+                    {content}
+                  </strong>
+                </p>
+              )
+              currentParagraph = []
+              return
+            }
+          }
+          
           elements.push(
-            <p key={elements.length} className="mb-4 text-gray-800 leading-relaxed">
+            <p key={elements.length} className="mb-5 text-gray-900 leading-relaxed text-lg">
               {parseInlineElements(text)}
             </p>
           )
@@ -34,7 +55,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       if (currentList.length > 0 && listType) {
         const ListComponent = listType === 'ul' ? 'ul' : 'ol'
         elements.push(
-          <ListComponent key={elements.length} className="my-4 ml-6 space-y-1">
+          <ListComponent key={elements.length} className="my-5 space-y-2" style={{ paddingLeft: '1.5rem' }}>
             {currentList}
           </ListComponent>
         )
@@ -49,17 +70,18 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
           <pre 
             key={elements.length} 
             style={{
-              backgroundColor: '#f3f4f6',
-              color: '#991b1b',
-              padding: '1rem',
+              backgroundColor: '#f5f5f5',
+              color: '#171717',
+              padding: '1.5rem',
               borderRadius: '0.5rem',
-              margin: '1.5rem 0',
+              margin: '2rem 0',
               overflowX: 'auto',
-              border: '1px solid #d1d5db',
-              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace'
+              fontSize: '0.875rem',
+              lineHeight: '1.7',
+              fontFamily: 'SF Mono, Monaco, Inconsolata, Roboto Mono, monospace'
             }}
           >
-            <code style={{ backgroundColor: 'transparent', color: '#991b1b', padding: '0' }}>
+            <code style={{ backgroundColor: 'transparent', color: '#171717', padding: '0' }}>
               {codeBlockContent.join('\n')}
             </code>
           </pre>
@@ -87,15 +109,33 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         return
       }
 
-      // Handle headers
+      // Check for section headers on their own line
+      const lineHeaderMatch = line.trim().match(/^\*{1,2}\s*([^*]+?)\s*\*{1,2}$/)
+      if (lineHeaderMatch) {
+        const content = lineHeaderMatch[1].trim()
+        if (content.toLowerCase().includes('perfect for') || 
+            content.toLowerCase().includes('try these prompts') ||
+            content.toLowerCase().includes('how to use') ||
+            content.toLowerCase().includes('best practices') ||
+            content.toLowerCase().includes('pro tip')) {
+          flushParagraph()
+          flushList()
+          elements.push(
+            <p key={elements.length} className="mb-3 mt-6">
+              <strong className="text-lg font-semibold text-gray-900">
+                {content}
+              </strong>
+            </p>
+          )
+          return
+        }
+      }
+
+      // Skip H1 headers since title is already displayed
       if (line.startsWith('# ')) {
         flushParagraph()
         flushList()
-        elements.push(
-          <h1 key={elements.length} className="text-4xl font-bold text-gray-900 mb-6 mt-8">
-            {line.substring(2)}
-          </h1>
-        )
+        // Don't render H1 - title is already shown in article header
         return
       }
 
@@ -103,7 +143,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         flushParagraph()
         flushList()
         elements.push(
-          <h2 key={elements.length} className="text-3xl font-bold text-gray-900 mb-4 mt-8">
+          <h2 key={elements.length} className="text-3xl font-semibold text-gray-900 mb-4 mt-12 leading-tight">
             {line.substring(3)}
           </h2>
         )
@@ -114,7 +154,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         flushParagraph()
         flushList()
         elements.push(
-          <h3 key={elements.length} className="text-2xl font-semibold text-gray-900 mb-3 mt-6">
+          <h3 key={elements.length} className="text-2xl font-medium text-gray-900 mb-3 mt-8 leading-tight">
             {line.substring(4)}
           </h3>
         )
@@ -129,14 +169,11 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
           <blockquote 
             key={elements.length} 
             style={{
-              borderLeft: '4px solid #ef4444',
+              borderLeft: '4px solid #d4d4d4',
               paddingLeft: '1rem',
-              margin: '1rem 0',
-              color: '#991b1b',
-              backgroundColor: '#f9fafb',
-              padding: '0.75rem 1rem',
-              borderRadius: '0 0.25rem 0.25rem 0',
-              border: '1px solid #d1d5db'
+              margin: '2rem 0',
+              color: '#525252',
+              fontStyle: 'italic'
             }}
           >
             {parseInlineElements(line.substring(2))}
@@ -156,7 +193,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
           listType = 'ul'
         }
         currentList.push(
-          <li key={currentList.length} className="text-gray-800 leading-relaxed list-disc">
+          <li key={currentList.length} className="text-gray-900 leading-relaxed text-lg list-disc" style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}>
             {parseInlineElements(unorderedMatch[1])}
           </li>
         )
@@ -170,7 +207,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
           listType = 'ol'
         }
         currentList.push(
-          <li key={currentList.length} className="text-gray-800 leading-relaxed list-decimal">
+          <li key={currentList.length} className="text-gray-900 leading-relaxed text-lg list-decimal" style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}>
             {parseInlineElements(orderedMatch[1])}
           </li>
         )
@@ -198,59 +235,84 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   }
 
   const parseInlineElements = (text: string): React.ReactNode => {
-    // Handle inline code first
-    const parts = text.split(/(`[^`]+`)/)
+    // Handle attribution text (single asterisks) not caught as section headers
+    const attributionParts = text.split(/(\*[^*]+\*)/g)
     
-    return parts.map((part, index) => {
-      if (part.startsWith('`') && part.endsWith('`')) {
-        return (
-          <code 
-            key={index} 
-            style={{
-              backgroundColor: '#f3f4f6',
-              color: '#991b1b',
-              padding: '0.25rem 0.5rem',
-              borderRadius: '0.25rem',
-              fontSize: '0.875rem',
-              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-              fontWeight: '500'
-            }}
-          >
-            {part.slice(1, -1)}
-          </code>
-        )
-      }
-
-      // Handle bold and italic
-      let processed = part
-      const elements: React.ReactNode[] = []
-      let lastIndex = 0
-
-      // Bold text
-      const boldRegex = /\*\*(.*?)\*\*/g
-      let match
-      while ((match = boldRegex.exec(part)) !== null) {
-        if (match.index > lastIndex) {
-          elements.push(processed.slice(lastIndex, match.index))
+    return attributionParts.map((part, index) => {
+      if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+        const content = part.slice(1, -1).trim()
+        
+        // Handle inline Pro Tip section header
+        if (/^pro tip/i.test(content)) {
+          return (
+            <strong key={index} className="text-lg font-semibold text-gray-900">
+              {content}
+            </strong>
+          )
         }
-        elements.push(
-          <strong key={`bold-${match.index}`} className="font-bold text-gray-900">
-            {match[1]}
-          </strong>
+
+        // Only handle attribution text like "Powered by ElevenLabs"
+        return (
+          <span key={index} className="text-sm text-gray-500 italic font-normal">
+            {content}
+          </span>
         )
-        lastIndex = match.index + match[0].length
       }
 
-      if (lastIndex < part.length) {
-        elements.push(part.slice(lastIndex))
-      }
+      // Handle inline code
+      const codeParts = part.split(/(`[^`]+`)/)
+      
+      return codeParts.map((codePart, codeIndex) => {
+        if (codePart.startsWith('`') && codePart.endsWith('`')) {
+          return (
+            <code 
+              key={`${index}-${codeIndex}`} 
+              style={{
+                backgroundColor: '#f5f5f5',
+                color: '#171717',
+                padding: '0.25rem 0.375rem',
+                borderRadius: '0.25rem',
+                fontSize: '0.875rem',
+                fontFamily: 'SF Mono, Monaco, Inconsolata, Roboto Mono, monospace',
+                fontWeight: '500'
+              }}
+            >
+              {codePart.slice(1, -1)}
+            </code>
+          )
+        }
 
-      return elements.length > 0 ? elements : part
+        // Handle bold text
+        const boldParts = codePart.split(/(\*\*[^*]+\*\*)/g)
+        
+        return boldParts.map((boldPart, boldIndex) => {
+          if (boldPart.startsWith('**') && boldPart.endsWith('**') && boldPart.length > 4) {
+            const boldContent = boldPart.slice(2, -2).trim()
+            
+            // Special styling for Pro Tip header
+            if (/^pro tip/i.test(boldContent)) {
+              return (
+                <strong key={`${index}-${codeIndex}-${boldIndex}`} className="text-lg font-semibold text-gray-900">
+                  {boldContent}
+                </strong>
+              )
+            }
+
+            return (
+              <strong key={`${index}-${codeIndex}-${boldIndex}`} className="font-semibold text-gray-900">
+                {boldContent}
+              </strong>
+            )
+          }
+          
+          return boldPart
+        })
+      })
     })
   }
 
   return (
-    <div className="prose prose-lg max-w-none">
+    <div className="max-w-none">
       {parseMarkdown(content)}
     </div>
   )
