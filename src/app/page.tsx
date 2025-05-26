@@ -1,10 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { SearchableDropdown } from '@/components/SearchableDropdown'
+import React, { useState, useEffect } from 'react'
 import { MarkdownRenderer } from '@/components/MarkdownRenderer'
 import { RauchLayout } from '@/components/RauchLayout'
-import { jobRoles } from '@/lib/data'
 import { Loader2, Sparkles } from 'lucide-react'
 
 interface BlogPost {
@@ -18,6 +16,7 @@ interface BlogPost {
 
 export default function Home() {
   const [selectedRole, setSelectedRole] = useState<string>('')
+  const [inputValue, setInputValue] = useState<string>('')
   const [blogPost, setBlogPost] = useState<BlogPost | null>(null)
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -67,7 +66,7 @@ export default function Home() {
     }
   }
 
-  const generateBlogPost = async (forceNew: boolean = false) => {
+  const generateBlogPost = async (role: string, forceNew: boolean = false) => {
     setGenerating(true)
     setError(null)
     try {
@@ -76,7 +75,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ jobRole: selectedRole }),
+        body: JSON.stringify({ jobRole: role }),
       })
       
       if (!response.ok) {
@@ -96,8 +95,17 @@ export default function Home() {
   // Reset the page to its pristine state when the brand logo is clicked
   const handleBrandClick = () => {
     setSelectedRole('')
+    setInputValue('')
     setBlogPost(null)
     setError(null)
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!inputValue.trim()) return
+    const role = inputValue.trim()
+    setSelectedRole(role)
+    generateBlogPost(role)
   }
 
   return (
@@ -114,13 +122,16 @@ export default function Home() {
             : "mb-12"
         }
       >
-        <div className="mb-6 w-full mx-auto">
-          <SearchableDropdown
-            options={jobRoles}
-            value={selectedRole}
-            onChange={setSelectedRole}
-            placeholder="Choose a job role to explore AI tools..."
-          />
+        <div className="mb-6 w-full mx-auto max-w-xl">
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Describe your job role and hit Enter..."
+              className="w-full border-b-4 border-gray-900 bg-transparent text-3xl md:text-4xl leading-tight placeholder:text-gray-500 placeholder:text-xl md:placeholder:text-2xl focus:outline-none focus:ring-0 pb-2 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </form>
         </div>
       </div>
 
@@ -161,7 +172,7 @@ export default function Home() {
                     Explore Other Roles
                   </button>
                   <button
-                    onClick={() => generateBlogPost(true)}
+                    onClick={() => generateBlogPost(selectedRole, true)}
                     disabled={generating}
                     className="rauch-button rauch-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -181,11 +192,8 @@ export default function Home() {
             <div className="text-center py-20">
               <div className="mb-8">
                 <Sparkles className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                  No guide yet for {selectedRole}
-                </h2>
-                <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                  Generate a personalized AI tools guide for this role.
+                <p className="text-gray-600 mb-8 max-w-md mx-auto text-xl">
+                  Creating a personalized guide!
                 </p>
               </div>
               
@@ -196,7 +204,7 @@ export default function Home() {
               )}
               
               <button
-                onClick={() => generateBlogPost()}
+                onClick={() => generateBlogPost(selectedRole)}
                 disabled={generating}
                 className="rauch-button rauch-button-primary rauch-button-large disabled:opacity-50 disabled:cursor-not-allowed"
               >

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Check, ChevronsUpDown } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface SearchableDropdownProps {
@@ -49,16 +49,15 @@ export function SearchableDropdown({
         type="button"
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex h-24 md:h-28 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-6 md:px-8 py-4 text-2xl ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "flex h-24 md:h-28 w-full items-center border-b-4 border-gray-900 bg-transparent px-6 md:px-8 text-2xl placeholder:text-gray-500 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50",
           !value && "text-gray-500"
         )}
       >
         <span className="truncate">{value || placeholder}</span>
-        <ChevronsUpDown className="h-4 w-4 opacity-50" />
       </button>
       
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg">
+        <div className="absolute z-50 left-0 top-full w-full border-x-4 border-b-4 border-gray-900 bg-white rounded-b-md shadow-lg">
           <div className="p-2">
             <input
               ref={inputRef}
