@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { MarkdownRenderer } from '@/components/MarkdownRenderer'
 import { RauchLayout } from '@/components/RauchLayout'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 interface BlogPost {
   id: string
@@ -44,6 +44,13 @@ export default function Home() {
       setError(null)
     }
   }, [selectedRole])
+
+  // Auto-generate a guide if none exists after fetching
+  useEffect(() => {
+    if (selectedRole && !loading && !generating && !blogPost && !error) {
+      generateBlogPost(selectedRole)
+    }
+  }, [selectedRole, loading, generating, blogPost, error])
 
   const fetchBlogPost = async (role: string) => {
     setLoading(true)
@@ -108,6 +115,18 @@ export default function Home() {
     generateBlogPost(role)
   }
 
+  const formatDate = (isoDate: string) => {
+    const date = new Date(isoDate)
+    const day = date.getDate()
+    const suffix = (day % 10 === 1 && day !== 11) ? 'st'
+      : (day % 10 === 2 && day !== 12) ? 'nd'
+      : (day % 10 === 3 && day !== 13) ? 'rd'
+      : 'th'
+    const month = date.toLocaleString('default', { month: 'long' })
+    const year = date.getFullYear()
+    return `${month} ${day}${suffix}, ${year}`
+  }
+
   return (
     <RauchLayout 
       description="Discover how AI can transform your work"
@@ -129,6 +148,7 @@ export default function Home() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Describe your job role and hit Enter..."
+              disabled={!!selectedRole}
               className="w-full border-b-4 border-gray-900 bg-transparent text-3xl md:text-4xl leading-tight placeholder:text-gray-500 placeholder:text-xl md:placeholder:text-2xl focus:outline-none focus:ring-0 pb-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </form>
@@ -151,9 +171,7 @@ export default function Home() {
                   {blogPost.title}
                 </h1>
                 <div className="rauch-article-meta">
-                  <span>Generated for {selectedRole}</span>
-                  <span className="mx-2">•</span>
-                  <span>{new Date(blogPost.createdAt).toLocaleDateString()}</span>
+                  <span>{formatDate(blogPost.createdAt)}</span>
                 </div>
               </div>
               
@@ -189,37 +207,38 @@ export default function Home() {
               </div>
             </article>
           ) : (
-            <div className="text-center py-20">
-              <div className="mb-8">
-                <Sparkles className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-8 max-w-md mx-auto text-xl">
-                  Creating a personalized guide!
-                </p>
-              </div>
-              
-              {error && (
+            <div className="flex flex-col items-center justify-center min-h-[50vh]">
+              {generating ? (
+                <>
+                  {/* Animated infinity-loop loader */}
+                  <svg width="280" height="120" viewBox="0 0 140 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-8">
+                    <defs>
+                      <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#0F172A" />
+                        <stop offset="100%" stopColor="#475569" />
+                      </linearGradient>
+                    </defs>
+                    <path id="infinity" d="M20 30c10-20 30-20 40 0s30 20 40 0" stroke="url(#grad)" strokeWidth="6" strokeLinecap="round" fill="none" />
+                    <style>{`
+                      #infinity {
+                        stroke-dasharray: 180 60;
+                        stroke-dashoffset: 0;
+                        animation: dash 2s ease-in-out infinite;
+                      }
+                      @keyframes dash {
+                        0%   { stroke-dashoffset: 0; }
+                        50%  { stroke-dashoffset: -240; }
+                        100% { stroke-dashoffset: -480; }
+                      }
+                    `}</style>
+                  </svg>
+                  <p className="text-gray-600 text-lg">Crafting your personalized guide...</p>
+                </>
+              ) : error ? (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg max-w-md mx-auto">
                   <p className="text-red-700 text-sm">{error}</p>
                 </div>
-              )}
-              
-              <button
-                onClick={() => generateBlogPost(selectedRole)}
-                disabled={generating}
-                className="rauch-button rauch-button-primary rauch-button-large disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {generating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Generate Guide
-                  </>
-                )}
-              </button>
+              ) : null}
             </div>
           )}
         </div>
