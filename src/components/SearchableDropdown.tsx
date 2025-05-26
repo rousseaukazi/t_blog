@@ -49,7 +49,7 @@ export function SearchableDropdown({
         type="button"
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "flex h-24 md:h-28 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-6 md:px-8 py-4 text-2xl ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           !value && "text-gray-500"
         )}
       >

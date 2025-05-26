@@ -17,29 +17,22 @@ export function RauchLayout({ children, title, description, onBrandClick }: Rauc
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="rauch-header">
-        <div className="rauch-container">
-          <nav className="rauch-nav">
-            <div>
-              <Link href="/" onClick={handleBrandClick} className="flex items-center space-x-2 group">
-                <span className="text-xl font-bold text-gray-900 group-hover:underline">
-                  WhichTools.ai
-                </span>
-                <img
-                  src="/favicon.png"
-                  alt="WhichTools.ai logo"
-                  className="w-7 h-7"
-                />
-              </Link>
-              {description && (
-                <p className="text-gray-600 text-sm mt-1">{description}</p>
-              )}
-            </div>
-            {/* Navigation links removed per design update */}
-          </nav>
-        </div>
-      </header>
+      {/* Bottom-right brand */}
+      <div className="fixed bottom-6 right-6 z-50 text-right">
+        <Link href="/" onClick={handleBrandClick} className="flex items-center justify-end space-x-2 group">
+          <span className="text-xl font-bold text-gray-900 group-hover:underline">
+            WhichTools.ai
+          </span>
+          <img
+            src="/favicon.png"
+            alt="WhichTools.ai logo"
+            className="w-7 h-7"
+          />
+        </Link>
+        {description && (
+          <p className="text-gray-600 text-sm mt-1 max-w-xs ml-auto">{description}</p>
+        )}
+      </div>
 
       {/* Main Content */}
       <main className="rauch-main">

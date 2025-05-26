@@ -23,6 +23,20 @@ export default function Home() {
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Lock the page scroll when no role is selected (landing state)
+  useEffect(() => {
+    if (!selectedRole) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'auto'
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'auto'
+    }
+  }, [selectedRole])
+
   useEffect(() => {
     if (selectedRole) {
       fetchBlogPost(selectedRole)
@@ -92,20 +106,21 @@ export default function Home() {
       onBrandClick={handleBrandClick}
     >
       {/* Job Role Selection */}
-      <div className="mb-12">
-        <div className="mb-6">
-          <label htmlFor="job-role" className="block text-lg font-medium text-gray-900 mb-3">
-            Select your job role
-          </label>
+      <div
+        className={
+          // When no role is selected, center the dropdown prominently on the page
+          !selectedRole
+            ? "flex flex-col items-center justify-center min-h-[calc(100vh-120px)]"
+            : "mb-12"
+        }
+      >
+        <div className="mb-6 w-full mx-auto">
           <SearchableDropdown
             options={jobRoles}
             value={selectedRole}
             onChange={setSelectedRole}
             placeholder="Choose a job role to explore AI tools..."
           />
-          <p className="mt-2 text-sm text-gray-600">
-            Pick from {jobRoles.length} of the most common jobs in the US
-          </p>
         </div>
       </div>
 
@@ -199,18 +214,6 @@ export default function Home() {
               </button>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!selectedRole && (
-        <div className="text-center py-20">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-            Select a job role to get started
-          </h2>
-          <p className="text-gray-600 max-w-md mx-auto">
-            Choose from our list of common job roles to discover AI tools that can help you work smarter.
-          </p>
         </div>
       )}
     </RauchLayout>
