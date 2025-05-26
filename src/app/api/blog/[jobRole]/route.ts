@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { blogCache } from '@/lib/cache'
 
 export async function GET(
   request: Request,
@@ -9,9 +9,7 @@ export async function GET(
     const { jobRole } = await params
     const decodedJobRole = decodeURIComponent(jobRole)
     
-    const blogPost = await prisma.blogPost.findUnique({
-      where: { jobRole: decodedJobRole }
-    })
+    const blogPost = blogCache.get(decodedJobRole)
     
     if (!blogPost) {
       return NextResponse.json({ error: 'Blog post not found' }, { status: 404 })

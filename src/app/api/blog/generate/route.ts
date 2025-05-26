@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { prisma } from '@/lib/prisma'
 import { aiTools } from '@/lib/data'
+import { blogCache, BlogPost } from '@/lib/cache'
 
 function selectToolsForRole(jobRole: string): typeof aiTools {
   // Simple logic to select diverse tools - in production, this could be more sophisticated
@@ -50,11 +50,8 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
     
-    // Check if blog already exists
-    const existingBlog = await prisma.blogPost.findUnique({
-      where: { jobRole }
-    })
-    
+    // Check if blog already exists in cache
+    const existingBlog = blogCache.get(jobRole)
     if (existingBlog) {
       return NextResponse.json(existingBlog)
     }
@@ -120,14 +117,18 @@ Write in Markdown format. Be creative, practical, and conversion-focused.`
     const titleMatch = content.match(/^#\s+(.+)$/m)
     const title = titleMatch ? titleMatch[1] : `AI Tools for ${jobRole}`
     
-    // Save to database
-    const blogPost = await prisma.blogPost.create({
-      data: {
-        jobRole,
-        title,
-        content
-      }
-    })
+    // Create blog post object
+    const blogPost: BlogPost = {
+      id: Date.now().toString(),
+      jobRole,
+      title,
+      content,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    
+    // Store in cache
+    blogCache.set(jobRole, blogPost)
     
     return NextResponse.json(blogPost)
   } catch (error) {
