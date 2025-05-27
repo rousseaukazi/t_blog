@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { MarkdownRenderer } from '@/components/MarkdownRenderer'
 import { RauchLayout } from '@/components/RauchLayout'
 import { Loader2 } from 'lucide-react'
+import { jobRoles } from '@/lib/data'
 
 interface BlogPost {
   id: string
@@ -21,6 +22,25 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Dynamically calculate how many pill rows are needed to fill the viewport height
+  const [rowCount, setRowCount] = useState<number>(0)
+
+  useEffect(() => {
+    const ROW_HEIGHT = 40 // approximate height including margin
+    const RESERVED_BOTTOM = 110 // tighter space to reduce bottom whitespace
+    const RESERVED_TOP = 40 // small top margin
+
+    const calcRows = () => {
+      const available = window.innerHeight - RESERVED_BOTTOM - RESERVED_TOP
+      const count = Math.ceil(available / ROW_HEIGHT) + 2 // a couple extra for overflow
+      setRowCount(count)
+    }
+
+    calcRows()
+    window.addEventListener('resize', calcRows)
+    return () => window.removeEventListener('resize', calcRows)
+  }, [])
 
   // Lock the page scroll when no role is selected (landing state)
   useEffect(() => {
@@ -132,6 +152,60 @@ export default function Home() {
       description="Discover how AI can transform your work"
       onBrandClick={handleBrandClick}
     >
+      {/* Global keyframes for marquee animations */}
+      <style jsx global>{`
+        @keyframes marquee-left {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes marquee-right {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0%); }
+        }
+      `}</style>
+
+      {/* Full-page animated background pills */}
+      {!selectedRole && (() => {
+        const RESERVED_BOTTOM = 110
+        return (
+          <div
+            className="fixed left-0 right-0 top-0 overflow-hidden z-0 pointer-events-none"
+            style={{ bottom: `${RESERVED_BOTTOM}px` }}
+          >
+            <div className="flex flex-col space-y-2 pt-10">
+              {Array.from({ length: rowCount }).map((_, rowIdx) => {
+                const offset = (rowIdx * 5) % jobRoles.length
+                const rotated = [...jobRoles.slice(offset), ...jobRoles.slice(0, offset)]
+                const rowRoles = [...rotated, ...rotated, ...rotated]
+                return (
+                  <div
+                    key={rowIdx}
+                    className={`group flex gap-3 whitespace-nowrap w-max ${rowIdx % 2 === 0 ? 'animate-[marquee-left_300s_linear_infinite]' : 'animate-[marquee-right_300s_linear_infinite]'} hover:[animation-play-state:paused]`}
+                  >
+                    {rowRoles.map((role, idx) => (
+                      <span
+                        key={`${rowIdx}-${idx}`}
+                        className="px-4 py-1.5 rounded-full bg-gray-200 text-gray-600 text-sm font-medium opacity-50 transition-colors duration-200 hover:opacity-100 hover:bg-indigo-500 hover:text-white pointer-events-auto cursor-pointer"
+                        onClick={() => {
+                          if (loading || generating) return
+                          setInputValue(role)
+                          setSelectedRole(role)
+                          generateBlogPost(role)
+                        }}
+                      >
+                        {role}
+                      </span>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+            {/* Bottom gradient fade to soften clipping */}
+            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-white pointer-events-none" />
+          </div>
+        )
+      })()}
+
       {/* Job Role Selection */}
       <div
         className={
@@ -141,16 +215,19 @@ export default function Home() {
             : "mb-12"
         }
       >
-        <div className="mb-6 w-full mx-auto max-w-xl">
-          <form onSubmit={handleSubmit}>
+        <div className="relative mb-6 w-full mx-auto max-w-xl">
+          <form onSubmit={handleSubmit} className="relative z-20">
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Describe your job role and hit Enter..."
+              placeholder="What do you do for work?"
               disabled={!!selectedRole}
-              className="w-full border-b-4 border-gray-900 bg-transparent text-3xl md:text-4xl leading-tight placeholder:text-gray-500 placeholder:text-xl md:placeholder:text-2xl focus:outline-none focus:ring-0 pb-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-md bg-white shadow-2xl shadow-gray-500/70 px-6 md:px-8 py-6 text-xl md:text-2xl leading-tight placeholder:text-gray-500 placeholder:text-xl md:placeholder:text-2xl focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
             />
+            {inputValue && !selectedRole && (
+              <span className="absolute bottom-2 right-4 text-xs text-gray-500">(press enter)</span>
+            )}
           </form>
         </div>
       </div>
