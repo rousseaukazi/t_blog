@@ -62,6 +62,9 @@ export async function POST(request: Request) {
       }
     }
     
+    // Check if caller wants streaming response
+    const streamWanted = url.searchParams.get('stream') === '1'
+
     // Select 3 tools for this role
     const selectedTools = selectToolsForRole(jobRole)
 
@@ -105,6 +108,46 @@ Structure:
 
 Write in Markdown format. Be creative, practical, and conversion-focused.`
 
+    if (streamWanted) {
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            const msgStream = await anthropic.messages.create({
+              model: 'claude-3-5-sonnet-20241022',
+              max_tokens: 4000,
+              temperature: 0.7,
+              stream: true,
+              messages: [
+                {
+                  role: 'user',
+                  content: prompt,
+                },
+              ],
+            })
+
+            for await (const chunk of msgStream) {
+              // We only care about text deltas
+              if ((chunk as any).type === 'content_block_delta' && (chunk as any).delta?.text) {
+                controller.enqueue((chunk as any).delta.text)
+              }
+            }
+            controller.close()
+          } catch (err) {
+            controller.error(err)
+          }
+        },
+      })
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'no-cache',
+          'Transfer-Encoding': 'chunked',
+        },
+      })
+    }
+
+    // Non-streaming path
     const message = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 4000,
@@ -112,9 +155,9 @@ Write in Markdown format. Be creative, practical, and conversion-focused.`
       messages: [
         {
           role: 'user',
-          content: prompt
-        }
-      ]
+          content: prompt,
+        },
+      ],
     })
     
     const content = message.content[0].type === 'text' ? message.content[0].text : ''

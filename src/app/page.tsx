@@ -22,6 +22,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [streamContent, setStreamContent] = useState<string>('')
 
   // Dynamically calculate how many pill rows are needed to fill the viewport height
   const [rowCount, setRowCount] = useState<number>(0)
@@ -68,7 +69,7 @@ export default function Home() {
   // Auto-generate a guide if none exists after fetching
   useEffect(() => {
     if (selectedRole && !loading && !generating && !blogPost && !error) {
-      generateBlogPost(selectedRole)
+      generateBlogPostStream(selectedRole)
     }
   }, [selectedRole, loading, generating, blogPost, error])
 
@@ -93,11 +94,13 @@ export default function Home() {
     }
   }
 
-  const generateBlogPost = async (role: string, forceNew: boolean = false) => {
+  const generateBlogPostStream = async (role: string, forceNew: boolean = false) => {
     setGenerating(true)
     setError(null)
+    setStreamContent('')
     try {
-      const response = await fetch(`/api/blog/generate${forceNew ? '?forceNew=1' : ''}`, {
+      const query = `?stream=1${forceNew ? '&forceNew=1' : ''}`
+      const response = await fetch(`/api/blog/generate${query}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,12 +108,35 @@ export default function Home() {
         body: JSON.stringify({ jobRole: role }),
       })
       
-      if (!response.ok) {
+      if (!response.ok || !response.body) {
         throw new Error('Failed to generate blog post')
       }
-      
-      const data = await response.json()
-      setBlogPost(data)
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let accumulated = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunkText = decoder.decode(value, { stream: true })
+        accumulated += chunkText
+        setStreamContent(accumulated)
+      }
+
+      // Streaming finished. Build blogPost object
+      const titleMatch = accumulated.match(/^#\s+(.+)$/m)
+      const title = titleMatch ? titleMatch[1] : `AI Tools for ${role}`
+      const blog: BlogPost = {
+        id: Date.now().toString(),
+        jobRole: role,
+        title,
+        content: accumulated,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      setBlogPost(blog)
+      setStreamContent('')
     } catch (err) {
       setError('Failed to generate blog post. Please make sure you have set up your Anthropic API key.')
       console.error(err)
@@ -132,7 +158,7 @@ export default function Home() {
     if (!inputValue.trim()) return
     const role = inputValue.trim()
     setSelectedRole(role)
-    generateBlogPost(role)
+    generateBlogPostStream(role)
   }
 
   const formatDate = (isoDate: string) => {
@@ -180,7 +206,7 @@ export default function Home() {
                 return (
                   <div
                     key={rowIdx}
-                    className={`group flex gap-3 whitespace-nowrap w-max ${rowIdx % 2 === 0 ? 'animate-[marquee-left_300s_linear_infinite]' : 'animate-[marquee-right_300s_linear_infinite]'} hover:[animation-play-state:paused]`}
+                    className={`group flex gap-3 whitespace-nowrap w-max ${rowIdx % 2 === 0 ? 'animate-[marquee-left_900s_linear_infinite]' : 'animate-[marquee-right_900s_linear_infinite]'} hover:[animation-play-state:paused]`}
                   >
                     {rowRoles.map((role, idx) => (
                       <span
@@ -190,7 +216,7 @@ export default function Home() {
                           if (loading || generating) return
                           setInputValue(role)
                           setSelectedRole(role)
-                          generateBlogPost(role)
+                          generateBlogPostStream(role)
                         }}
                       >
                         {role}
@@ -240,6 +266,14 @@ export default function Home() {
               <Loader2 className="h-6 w-6 animate-spin text-gray-600 mb-4" />
               <p className="text-gray-600">Loading...</p>
             </div>
+          ) : streamContent ? (
+            <div className="rauch-content relative">
+              <MarkdownRenderer content={streamContent} />
+              {/* Blinking caret for typewriter feel */}
+              {generating && (
+                <span className="inline-block w-2 h-6 bg-gray-800 animate-pulse ml-1 align-middle" />
+              )}
+            </div>
           ) : blogPost ? (
             <article className="rauch-article">
               {/* Article Header */}
@@ -267,7 +301,7 @@ export default function Home() {
                     Explore Other Roles
                   </button>
                   <button
-                    onClick={() => generateBlogPost(selectedRole, true)}
+                    onClick={() => generateBlogPostStream(selectedRole, true)}
                     disabled={generating}
                     className="rauch-button rauch-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
