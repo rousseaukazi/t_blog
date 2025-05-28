@@ -67,24 +67,32 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     const flushCodeBlock = () => {
       if (codeBlockContent.length > 0) {
         elements.push(
-          <pre 
-            key={elements.length} 
-            style={{
-              backgroundColor: '#f5f5f5',
-              color: '#171717',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              margin: '2rem 0',
-              overflowX: 'auto',
-              fontSize: '0.875rem',
-              lineHeight: '1.7',
-              fontFamily: 'SF Mono, Monaco, Inconsolata, Roboto Mono, monospace'
-            }}
-          >
-            <code style={{ backgroundColor: 'transparent', color: '#171717', padding: '0' }}>
-              {codeBlockContent.join('\n')}
-            </code>
-          </pre>
+          <div key={elements.length} className="my-6">
+            <pre
+              style={{
+                backgroundColor: '#f5f5f5',
+                color: '#171717',
+                padding: '1.5rem',
+                borderRadius: '0.5rem',
+                overflowX: 'auto',
+                fontSize: '0.875rem',
+                lineHeight: '1.7',
+                fontFamily: 'SF Mono, Monaco, Inconsolata, Roboto Mono, monospace',
+              }}
+            >
+              <code style={{ backgroundColor: 'transparent', color: '#171717', padding: '0' }}>
+                {codeBlockContent.join('\n')}
+              </code>
+            </pre>
+            <div className="flex justify-end mt-2">
+              <button
+                onClick={() => alert('Not implemented yet')}
+                className="text-sm text-white bg-gray-900 hover:bg-gray-700 px-3 py-1.5 rounded"
+              >
+                Generate
+              </button>
+            </div>
+          </div>
         )
         codeBlockContent = []
       }

@@ -203,15 +203,17 @@ export default function Home() {
                 const offset = (rowIdx * 5) % jobRoles.length
                 const rotated = [...jobRoles.slice(offset), ...jobRoles.slice(0, offset)]
                 const rowRoles = [...rotated, ...rotated, ...rotated]
+                const hoverColors = ['hover:bg-indigo-500','hover:bg-emerald-500','hover:bg-amber-500','hover:bg-rose-500','hover:bg-sky-500']
+                const hoverColorClass = hoverColors[rowIdx % hoverColors.length]
                 return (
                   <div
                     key={rowIdx}
-                    className={`group flex gap-3 whitespace-nowrap w-max ${rowIdx % 2 === 0 ? 'animate-[marquee-left_900s_linear_infinite]' : 'animate-[marquee-right_900s_linear_infinite]'} hover:[animation-play-state:paused]`}
+                    className={`group flex gap-3 whitespace-nowrap w-max ${rowIdx % 2 === 0 ? 'animate-[marquee-left_1800s_linear_infinite]' : 'animate-[marquee-right_1800s_linear_infinite]'} hover:[animation-play-state:paused]`}
                   >
                     {rowRoles.map((role, idx) => (
                       <span
                         key={`${rowIdx}-${idx}`}
-                        className="px-4 py-1.5 rounded-full bg-gray-200 text-gray-600 text-sm font-medium opacity-50 transition-colors duration-200 hover:opacity-100 hover:bg-indigo-500 hover:text-white pointer-events-auto cursor-pointer"
+                        className={`px-4 py-1.5 rounded-full bg-gray-200 text-gray-600 text-sm font-medium opacity-30 transition-colors duration-200 hover:opacity-100 ${hoverColorClass} hover:text-white pointer-events-auto cursor-pointer`}
                         onClick={() => {
                           if (loading || generating) return
                           setInputValue(role)
